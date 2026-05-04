@@ -1,26 +1,38 @@
 import Foundation
 
-class ListContactsViewModel {
-    private let service = ListContactService()
+
+protocol ListContactsViewModel {
+    typealias State = ListContactsViewModelImpl.State
     
-    private var completion: (([Contact]?, Error?) -> Void)?
+    var stateStream: AsyncStream<State> { get }
+    func loadContacts() async
+}
+
+extension ListContactsViewModelImpl {
+    enum State {
+        case loading
+        case success([Contact])
+        case error(Error)
+    }
+}
+
+class ListContactsViewModelImpl: ListContactsViewModel {
+    private let service: ListContactService
+    private var contacts: [Contact] = []
+    var (stateStream, stateContinuation) = AsyncStream<State>.makeStream()
     
-    init() { }
-    
-    func loadContacts(_ completion: @escaping ([Contact]?, Error?) -> Void) {
-        self.completion = completion
-        service.fetchContacts { contacts, err in
-            self.handle(contacts, err)
-        }
+    init(service: ListContactService = ListContactServiceImpl()) {
+        self.service = service
     }
     
-    private func handle(_ contacts: [Contact]?, _ error: Error?) {
-        if let e = error {
-            completion?(nil, e)
-        }
+    func loadContacts() async {
+        let result: Result<[Contact], Error> = await service.fetchContacts()
         
-        if let contacts = contacts {
-            completion?(contacts, nil)
+        switch result {
+        case .success(let contacts):
+            self.stateContinuation.yield(.success(contacts))
+        case .failure(let error):
+            self.stateContinuation.yield(.error(error))
         }
     }
 }
