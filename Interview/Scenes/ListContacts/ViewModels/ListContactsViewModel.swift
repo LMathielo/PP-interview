@@ -1,26 +1,35 @@
 import Foundation
 
-class ListContactsViewModel {
-    private let service = ListContactService()
+protocol ListContactsViewModel {
+    typealias State = ListContactsViewModelImpl.State
+    var updateState: ((State) -> Void)? { get set }
     
-    private var completion: (([Contact]?, Error?) -> Void)?
+    func loadContacts()
+}
+
+class ListContactsViewModelImpl: ListContactsViewModel {
+    var updateState: ((State) -> Void)?
     
-    init() { }
-    
-    func loadContacts(_ completion: @escaping ([Contact]?, Error?) -> Void) {
-        self.completion = completion
-        service.fetchContacts { contacts, err in
-            self.handle(contacts, err)
-        }
+    enum State {
+        case loading
+        case success([Contact])
+        case error(Error)
     }
     
-    private func handle(_ contacts: [Contact]?, _ error: Error?) {
-        if let e = error {
-            completion?(nil, e)
-        }
-        
-        if let contacts = contacts {
-            completion?(contacts, nil)
+    private let service: ListContactService
+    
+    init(service: ListContactService = ListContactServiceImpl()) {
+        self.service = service
+    }
+    
+    func loadContacts() {
+        service.fetchContacts { [updateState] result in
+            switch result {
+            case .success(let contacts):
+                updateState?(.success(contacts))
+            case .failure(let error):
+                updateState?(.error(error))
+            }
         }
     }
 }
