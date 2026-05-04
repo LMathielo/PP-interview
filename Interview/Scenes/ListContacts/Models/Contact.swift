@@ -11,7 +11,7 @@ import Foundation
 ]
 */
 
-class Contact: Codable {
+struct Contact: Codable, Equatable {
     var id: Int
     var name: String = ""
     var photoURL = ""
