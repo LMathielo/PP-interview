@@ -3,12 +3,12 @@ import XCTest
 
 class ListContactServiceTests: XCTestCase {
     var sut: ListContactService!
-    fileprivate var urlSessionMock: ApiUrlSessionMock!
+    fileprivate var networkMock: NetworkMock!
         
     override func setUp() {
-        urlSessionMock = ApiUrlSessionMock()
+        networkMock = NetworkMock()
         
-        sut = ListContactServiceImpl(urlSession: urlSessionMock)
+        sut = ListContactServiceImpl(network: networkMock)
     }
     
     func test_callJson() {
@@ -16,6 +16,12 @@ class ListContactServiceTests: XCTestCase {
         let expected: [Contact] = [
             Contact(id: 2, name: "Beyonce", photoURL: "https://api.adorable.io/avatars/285/a2.png")
         ]
+        
+        networkMock.result = .success(
+            [
+                Contact(id: 2, name: "Beyonce", photoURL: "https://api.adorable.io/avatars/285/a2.png")
+            ]
+        )
         
         // When
         sut.fetchContacts(completion: { result in
@@ -29,27 +35,16 @@ class ListContactServiceTests: XCTestCase {
         })
         
         // Then
-        XCTAssertEqual(urlSessionMock.dataTaskCallsCount, 1)
+        XCTAssertEqual(networkMock.fetchCallsCount, 1)
     }
 }
 
-fileprivate class ApiUrlSessionMock: ApiUrlSession {
-    var dataTaskCallsCount = 0
+fileprivate class NetworkMock: Network {
+    var result: Result<[Contact], any Error>!
+    var fetchCallsCount = 0
     
-    private let mockData: Data? = {
-        """
-        [{
-          "id": 2,
-          "name": "Beyonce",
-          "photoURL": "https://api.adorable.io/avatars/285/a2.png"
-        }]
-        """.data(using: .utf8)
-    }()
-    
-    func dataTask(with url: URL, completionHandler: @escaping @Sendable (Data?, URLResponse?, (any Error)?) -> Void) -> URLSessionDataTask {
-        completionHandler(mockData, nil, nil)
-        dataTaskCallsCount += 1
-        
-        return URLSessionDataTask()
+    func fetch<T>(with apiURL: String, completion: @escaping (Result<T, any Error>) -> Void) where T : Decodable {
+        fetchCallsCount += 1
+        completion((result as! Result<T, any Error>))
     }
 }

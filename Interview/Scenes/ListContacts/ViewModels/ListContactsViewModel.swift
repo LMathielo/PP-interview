@@ -23,6 +23,8 @@ class ListContactsViewModelImpl: ListContactsViewModel {
     }
     
     func loadContacts() {
+        updateState?(.loading)
+        
         service.fetchContacts { [updateState] result in
             switch result {
             case .success(let contacts):

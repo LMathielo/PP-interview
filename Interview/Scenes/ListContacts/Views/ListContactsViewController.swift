@@ -1,6 +1,6 @@
 import UIKit
 
-class UserIdsLegacy {
+struct UserIdsLegacy {
     static let legacyIds = [10, 11, 12, 13]
     
     static func isLegacy(id: Int) -> Bool {
@@ -29,9 +29,10 @@ class ListContactsViewController: UIViewController, UITableViewDataSource, UITab
     }()
     
     var contacts = [Contact]()
-    var viewModel: ListContactsViewModel!
+    var viewModel: ListContactsViewModel
     
-    init() {
+    init(viewModel: ListContactsViewModel = ListContactsViewModelImpl()) {
+        self.viewModel = viewModel
         super.init(nibName: nil, bundle: nil)
     }
     
@@ -48,7 +49,6 @@ class ListContactsViewController: UIViewController, UITableViewDataSource, UITab
     
     override func viewDidLoad() {
         super.viewDidLoad()
-        viewModel = ListContactsViewModelImpl()
         configureViews()
         bindViewModel()
         
@@ -82,7 +82,6 @@ class ListContactsViewController: UIViewController, UITableViewDataSource, UITab
     }
     
     func configureViews() {
-        view.backgroundColor = .red
         view.addSubview(tableView)
         NSLayoutConstraint.activate([
             tableView.topAnchor.constraint(equalTo: view.topAnchor),
@@ -127,6 +126,6 @@ class ListContactsViewController: UIViewController, UITableViewDataSource, UITab
     }
     
     func loadData() {
-        viewModel?.loadContacts()
+        viewModel.loadContacts()
     }
 }

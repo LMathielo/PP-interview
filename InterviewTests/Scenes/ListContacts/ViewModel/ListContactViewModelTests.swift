@@ -6,6 +6,9 @@ class ListContactViewModelTests: XCTestCase {
     fileprivate var serviceMock: ListContactServiceMock!
     
     override func setUp() {
+        
+        serviceMock = ListContactServiceMock()
+        
         sut = ListContactsViewModelImpl(
             service: serviceMock
         )

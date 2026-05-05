@@ -4,6 +4,7 @@ class ContactCell: UITableViewCell {
     lazy var activity: UIActivityIndicatorView = {
         let activity = UIActivityIndicatorView()
         activity.hidesWhenStopped = true
+        activity.translatesAutoresizingMaskIntoConstraints = false
         return activity
     }()
     
