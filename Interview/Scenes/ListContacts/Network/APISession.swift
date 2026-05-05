@@ -11,6 +11,7 @@ import Foundation
 enum APIError: Error {
     case invalidUrl
     case apiError
+    case networkError
     case decodingError
 }
 

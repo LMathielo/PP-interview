@@ -4,6 +4,7 @@ class ContactCell: UITableViewCell {
     lazy var activity: UIActivityIndicatorView = {
         let activity = UIActivityIndicatorView()
         activity.hidesWhenStopped = true
+        activity.translatesAutoresizingMaskIntoConstraints = false
         return activity
     }()
     
@@ -22,6 +23,8 @@ class ContactCell: UITableViewCell {
         return label
     }()
     
+    var task: Task<(), Never>?
+    
     override init(style: UITableViewCell.CellStyle, reuseIdentifier: String?) {
         super.init(style: style, reuseIdentifier: reuseIdentifier)
         
@@ -36,7 +39,8 @@ class ContactCell: UITableViewCell {
     
     override func prepareForReuse() {
         super.prepareForReuse()
-        
+        task?.cancel()
+        task = nil
         contactImage.image = nil
     }
     
@@ -66,15 +70,15 @@ class ContactCell: UITableViewCell {
         
         if let urlPhoto = URL(string: contact.photoURL) {
             activity.startAnimating()
-            Task.detached {
+            task = Task.detached {
                 guard let data = try? Data(contentsOf: urlPhoto) else { return }
                 let image = UIImage(data: data)
                 Task { @MainActor in
+                    guard !Task.isCancelled else { return }
                     self.activity.stopAnimating()
                     self.contactImage.image = image
                 }
             }
         }
-        
     }
 }
