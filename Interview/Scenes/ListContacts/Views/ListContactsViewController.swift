@@ -29,9 +29,10 @@ class ListContactsViewController: UIViewController, UITableViewDataSource, UITab
     }()
     
     var contacts = [Contact]()
-    var viewModel: ListContactsViewModel!
+    let viewModel: ListContactsViewModel
     
-    init() {
+    init(viewModel: ListContactsViewModel = ListContactsViewModelImpl()) {
+        self.viewModel = viewModel
         super.init(nibName: nil, bundle: nil)
     }
     
@@ -48,7 +49,6 @@ class ListContactsViewController: UIViewController, UITableViewDataSource, UITab
     
     override func viewDidLoad() {
         super.viewDidLoad()
-        viewModel = ListContactsViewModelImpl()
         configureViews()
         bindViewModel()
         navigationController?.title = "Lista de contatos"
@@ -57,10 +57,10 @@ class ListContactsViewController: UIViewController, UITableViewDataSource, UITab
     }
     
     func bindViewModel() {
-        Task { [viewModel] in
-            guard let viewModel else { return }
+        Task { [weak self] in
+            guard let self else { return }
             
-            for await state in viewModel.stateStream {
+            for await state in self.viewModel.stateStream {
                 switch state {
                 case .loading:
                     self.activity.startAnimating()
@@ -111,6 +111,10 @@ class ListContactsViewController: UIViewController, UITableViewDataSource, UITab
         let contact = contacts[indexPath.row]
         
         cell.configure(with: contact)
+        Task {
+            let image = await self.viewModel.loadImage(for: contact)
+            cell.loadImage(with: image)
+        }
         
         return cell
     }

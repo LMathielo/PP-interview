@@ -67,18 +67,10 @@ class ContactCell: UITableViewCell {
     
     func configure(with contact: Contact) {
         fullnameLabel.text = contact.name
-        
-        if let urlPhoto = URL(string: contact.photoURL) {
-            activity.startAnimating()
-            task = Task.detached {
-                guard let data = try? Data(contentsOf: urlPhoto) else { return }
-                let image = UIImage(data: data)
-                Task { @MainActor in
-                    guard !Task.isCancelled else { return }
-                    self.activity.stopAnimating()
-                    self.contactImage.image = image
-                }
-            }
-        }
+    }
+    
+    func loadImage(with image: UIImage) {
+        self.activity.stopAnimating()
+        self.contactImage.image = image
     }
 }

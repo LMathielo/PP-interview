@@ -6,6 +6,7 @@ protocol ListContactsViewModel {
     
     var stateStream: AsyncStream<State> { get }
     func loadContacts() async
+    func loadImage(for contact: Contact) async -> UIImage
 }
 
 extension ListContactsViewModelImpl {
@@ -32,21 +33,33 @@ class ListContactsViewModelImpl: ListContactsViewModel {
         
         switch result {
         case .success(let contacts):
-            self.stateContinuation.yield(.success(contacts))
+            
+            var seenContacts: [String: Int] = [:]
+            
+            let filteredContatcs = contacts.filter( { contact in
+                if seenContacts[contact.name] == nil {
+                    seenContacts[contact.name] = contact.id
+                    return true
+                } else {
+                    return false
+                }
+            })
+            
+            self.stateContinuation.yield(.success(filteredContatcs))
         case .failure(let error):
             self.stateContinuation.yield(.error(error))
         }
     }
     
-    func loadImage(of contact: Contact) async -> Result<UIImage, Error> {
+    func loadImage(for contact: Contact) async -> UIImage {
         guard
             let urlPhoto = URL(string: contact.photoURL),
             let data = try? Data(contentsOf: urlPhoto),
             let image = UIImage(data: data)
         else {
-            return .failure(APIError.invalidUrl)
+            return UIImage()
         }
         
-        return .success(image)
+        return image
     }
 }
